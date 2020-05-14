@@ -1,0 +1,489 @@
+#include <iostream>
+#include <stdlib.h>
+#include <string.h>
+#include <vector>
+#include <unordered_map>
+
+
+using namespace std;
+
+const int manopera=7;
+float incasari=0;
+
+class Calcul
+{
+private:
+public:
+    Calcul ();
+    Calcul (const Calcul&);
+    virtual ~Calcul();
+
+    virtual void citire(istream &in);
+    virtual void afisare(ostream &out);
+
+    friend istream& operator>>(istream&, Calcul&);
+    friend ostream& operator<<(ostream&, Calcul&);
+    Calcul& operator=(Calcul&);
+
+    static float met_calcul(vector<pair<string,int> >  z)
+    {
+        float pret=0;
+        for(auto x:z)
+               pret+=x.second;
+        pret+=manopera;
+        return pret;
+    }
+};
+Calcul::Calcul(){}
+Calcul::~Calcul(){}
+void Calcul::citire(istream &in){}
+void Calcul::afisare(ostream &out){}
+istream& operator>>(istream& in,Calcul& p)
+{
+    p.citire(in);
+    return in;
+}
+
+ostream& operator<<(ostream& out, Calcul& p)
+{
+    p.afisare(out);
+    return out;
+}
+Calcul& Calcul::operator=(Calcul& p)
+{
+    return *this;
+}
+
+class Pizza:public Calcul
+{
+private:
+    int id_pizza;
+    vector<pair<string,int> > ingrediente;
+public:
+    Pizza (int, vector<pair<string,int> > );
+    Pizza (const Pizza&);
+    virtual ~Pizza();
+
+    virtual void citire(istream &in);
+    virtual void afisare(ostream &out);
+
+    friend istream& operator>>(istream&, Pizza&);
+    friend ostream& operator<<(ostream&, Pizza&);
+
+    Pizza& operator=(const Pizza&);
+
+        static float met_calcul(vector<pair<string,int> >  z)
+    {
+        float pret=Calcul::met_calcul(z);
+        return pret;
+    }
+
+
+    void set_id(int x)
+    {
+        id_pizza=x;
+    }
+    void set_ingrediente(vector<pair<string,int> > x)
+    {
+        ingrediente=x;
+    }
+
+    vector<pair<string,int> > get_ingrediente()
+    {
+        return ingrediente;
+    }
+    int get_id()
+    {
+        return id_pizza;    }
+
+
+};
+Pizza::Pizza (int x=0,vector<pair<string,int> >  y={}):Calcul()
+{
+    id_pizza=x;
+    ingrediente=y;
+}
+Pizza::Pizza (const Pizza &p)
+{
+    this->id_pizza=p.id_pizza;
+    this->ingrediente=p.ingrediente;
+}
+Pizza::~Pizza()
+{
+    this->id_pizza=0;
+    this->ingrediente={};
+}
+void Pizza::citire(istream &in)
+{
+    int x,n,y;
+    string z;
+    cout<<"ID pizza: ";
+    in>>x;
+    id_pizza=x;
+
+    cout<<"Cate ingrediente va avea pizza "<<x<<" ? ";
+    in>>n;
+
+    for(int i=0;i<n;i++)
+    {
+        cin.get();
+        cout<<"Nume ingredient "<<i+1<<" : ";
+        getline(in,z);
+
+        cout<<"Pret ingredient "<<i+1<<" : ";
+        in>>y;
+
+        ingrediente.push_back(make_pair(z,y));
+
+    }
+
+
+
+
+
+}
+void Pizza::afisare(ostream &out)
+{
+    cout<<"\nID pizza "<<id_pizza<<"\nLista ingrediente";
+    for( auto x:ingrediente)
+        cout<<x.first<<" ";
+
+    float n=met_calcul(ingrediente);
+    cout<<"\nPretul pizzei este de "<<n<<" lei!";
+}
+istream& operator>>(istream& in,Pizza& p)
+{
+    p.citire(in);
+    return in;
+}
+
+ostream& operator<<(ostream& out, Pizza& p)
+{
+    p.afisare(out);
+    return out;
+}
+
+Pizza& Pizza::operator=(const Pizza& p){
+    this->id_pizza = p.id_pizza;
+    this->ingrediente=p.ingrediente;
+
+    return *this;
+}
+
+class Comanda_online:public Pizza
+{
+protected:
+    int distanta;
+public:
+    Comanda_online (int,vector<pair<string,int> >,int);
+    Comanda_online (const Comanda_online&);
+    virtual ~Comanda_online();
+
+    virtual void citire(istream &in);
+    virtual void afisare(ostream &out);
+
+    friend istream& operator>>(istream&, Comanda_online&);
+    friend ostream& operator<<(ostream&, Comanda_online&);
+
+    Comanda_online& operator=(const Comanda_online&);
+
+    void set_dist(int x)
+    {
+        distanta=x;
+    }
+
+
+    int get_dist() const
+    {
+        return distanta;
+    }
+        static float met_calcul(vector<pair<string,int> > z,int i)
+    {
+        float pret=Calcul::met_calcul(z);
+
+        if(i>=10)
+        {int x=i/10;
+        pret=pret+ pret/100*5*x;
+        }
+        return pret;
+    }
+};
+
+Comanda_online::Comanda_online (int x=0,vector<pair<string,int> >  umap={},int z=0):Pizza(x,umap)
+{
+    distanta=z;
+
+}
+Comanda_online::Comanda_online (const Comanda_online &p):Pizza(p)
+{
+    this->distanta=p.distanta;
+
+}
+Comanda_online::~Comanda_online()
+{
+
+    this->distanta=0;
+
+}
+void Comanda_online::citire(istream &in)
+{
+    Pizza::citire(in);
+    int x;
+    cout<<"Distanta de livrare(in km): ";
+    in>>x;
+    distanta=x;
+
+}
+void Comanda_online::afisare(ostream &out)
+{
+    Pizza::afisare(out);
+    cout<<"Distanta de livrare este "<<distanta<<" km.\n";
+    float n=met_calcul(get_ingrediente(),get_dist());
+    cout<<"\nPretul cu livrare este "<<n<<" lei!\n";
+}
+istream& operator>>(istream& in,Comanda_online& p)
+{
+    p.citire(in);
+    return in;
+}
+
+ostream& operator<<(ostream& out, Comanda_online& p)
+{
+    p.afisare(out);
+    return out;
+}
+
+Comanda_online& Comanda_online::operator=(const Comanda_online& p){
+    Pizza::operator=(p);
+    this->distanta=p.distanta;
+
+    return *this;
+}
+
+
+template <class T>
+class Meniu
+{
+private:
+    unordered_map<int,vector<pair<string,int> > > meniuu;
+public:
+
+    friend class Comanda_online;
+    friend class Pizza;
+    friend class Calcul;
+
+    float met_calcul1( unordered_map<int,vector<pair<string,int> > > z)
+    {
+        float pret;
+        for(auto x:z)
+        return pret=Pizza::met_calcul(x.second);
+
+    }
+    float met_calcul2( unordered_map<int,vector<pair<string,int> > > z,int i)
+    {
+        float pret;
+        for(auto x:z)
+        return pret=Comanda_online::met_calcul(x.second,i);
+
+    }
+
+
+    int get_id(Pizza* p)
+    {
+
+        return p->get_id();
+    }
+    int get_ingrediente(Pizza* p)
+    {
+
+        return p->get_ingrediente();
+    }
+
+
+
+    Meniu(unordered_map<int,vector<pair<string,int> > > a={})
+{
+    meniuu=a;
+}
+~Meniu()
+{
+    meniuu={};
+}
+Meniu(Meniu &d)
+{
+    this->meniuu=d.meniuu;
+}
+void citire(istream &in)
+{
+    int tip,numar;
+    cout<<"\nCate pizza doriti sa adaugati in meniu? ";in>>numar;
+  Pizza *a;
+    for (int i=0;i<numar;i++)
+    {
+
+    a = new Pizza;
+    in>>*a;
+    meniuu[a->get_id()]=a->get_ingrediente();
+    }
+}
+void comanda()
+{
+    float pret_total=0;
+   Pizza *a;
+    int dist;
+    cout<<"\n\nCe fel de comanda vreti sa faceti?\n 1.In restaurant\n 2.Online\n";
+    int tip,numar;
+    e1: cin>>tip;
+    if(tip!=1 && tip!=2)
+        {   system("cls");
+            cout<<"\nAlegeti 1 pentru restaurant sau 2 pentru online!";
+        goto e1;}
+    cout<<"\nCate pizze vreti sa comandati? ";
+    cin>>numar;
+    if(tip==2)
+    {cout<<"\nDistanta de livrare(km): ";cin>>dist;}
+    for(int i=0;i<numar;i++)
+    {  int id;
+        e2:cout<<"\nCe ID are pizza cu numarul "<<i+1<<" din comanda dumneavoastra?  ";cin>>id;
+        if(tip==1)
+         a= new Pizza;
+         else
+            {a=new Comanda_online;
+            dynamic_cast <Comanda_online*>(a)->set_dist(dist);
+
+            }
+            int verif=0;
+
+    for(auto x:meniuu)
+        if(id==x.first)
+            {a->set_id(x.first);
+             a->set_ingrediente(x.second);
+            verif=1;
+            break;}
+     if (verif==0)
+           {
+
+           cout<<"\nNu exista nici o pizza cu acest ID in Meniu!\n";
+           goto e2;}
+           if(tip==1)
+           {
+
+             pret_total+=Pizza::met_calcul(a->get_ingrediente());
+           }
+           if(tip==2)
+             pret_total+=Comanda_online::met_calcul(a->get_ingrediente(),dist);
+
+
+
+        }
+        cout<<"\nPretul comenzii cu tot cu livrare este de "<<pret_total<<" lei!\n";
+        incasari+=pret_total;
+    }
+
+void afisare(ostream &out)
+{
+    for(auto x:meniuu)
+    {out<<"\nID pizza: " << x.first << "\nLista ingrediente :";
+    for( auto y:x.second)
+        out<<y.first<<" ";
+    float n=Pizza::met_calcul(x.second);
+    out<<"\nPretul pizzei este de "<<n<<" lei!";
+    }
+}
+friend istream& operator>>(istream& in,Meniu& d)
+{
+    d.citire(in);
+    return in;
+}
+friend ostream& operator<<(ostream& out, Meniu& d)
+{
+    d.afisare(out);
+    return out;
+}
+Meniu& operator=(Meniu& d)
+{
+    this->meniuu=d.meniuu;
+    return *this;
+}
+};
+
+
+void menu_out()
+{
+    cout<<"\n\t MENIU: \n \n";
+    cout<<"1. Adaugati pizza in meniu \n";
+    cout<<"2. Afisati toate pizzele din meniu \n";
+    cout<<"3. Plasati o comanda(dupa id) \n";
+    cout<<"4. Afisati incasarile facute din pizza vegetariana \n";
+    cout<<"5. Afisati totalul incasarilor \n";
+    cout<<"6. Stergeti toate pizzele din meniu \n";
+    cout<<"0. Iesire.\n";
+}
+void menu()
+{
+    int option;
+    option=0;
+    Meniu<Calcul> meniuu;
+    int exista=0;
+    do
+    {
+        menu_out();
+
+        cout<<"\nIntroduceti numarul actiunii: ";
+        cin>>option;
+
+        if (option==1)
+        {
+            exista=1;
+            cin>>meniuu;
+        }
+        if (option==2)
+        {
+            if(exista!=0)
+                cout<<meniuu;
+                else
+                    cout<<"\nNu exista nici o pizza in meniu!\n";
+        }
+        if (option==3)
+        {      if(exista!=0)
+              {cout<<meniuu;
+              meniuu.comanda();}
+              else
+                cout<<"\nNu exista nici o pizza in meniu!\n";
+        }
+        if(option==4)
+        {
+                cout<<"\nAcest feature urmeaza sa fie implementat!\n";
+        }
+        if(option==5)
+        {
+            cout<<"\nIncasarile totale sunt de "<<incasari<<" lei!\n";
+        }
+        if(option==6)
+        {
+            meniuu.~Meniu();
+            exista=0;
+            cout<<"\nMeniul a fost sters!\n";
+        }
+        if (option==0)
+        {
+            printf("\nEXIT!\n");
+        }
+        if (option<0||option>6)
+        {
+            printf("\nSelectie invalida\n");
+        }
+        printf("\n");
+        system("pause");
+        system("cls");
+    }
+    while(option!=0);
+}
+
+int main()
+{
+
+menu();
+
+    return 0;
+}
